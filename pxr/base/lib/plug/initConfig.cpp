@@ -38,14 +38,15 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 namespace {
 
-const char* pathEnvVarName      = BOOST_PP_STRINGIZE(PXR_PLUGINPATH_NAME);
-const char* buildLocation       = BOOST_PP_STRINGIZE(PXR_BUILD_LOCATION);
-const char* pluginBuildLocation = BOOST_PP_STRINGIZE(PXR_PLUGIN_BUILD_LOCATION);
-const char* installLocation     = BOOST_PP_STRINGIZE(PXR_INSTALL_LOCATION); 
+// Katana: Not used by Katana.
+// const char* pathEnvVarName      = BOOST_PP_STRINGIZE(PXR_PLUGINPATH_NAME);
+// const char* buildLocation       = BOOST_PP_STRINGIZE(PXR_BUILD_LOCATION);
+// const char* pluginBuildLocation = BOOST_PP_STRINGIZE(PXR_PLUGIN_BUILD_LOCATION);
+// const char* installLocation     = BOOST_PP_STRINGIZE(PXR_INSTALL_LOCATION);
 
 void
 _AppendPathList(
-    std::vector<std::string>* result, 
+    std::vector<std::string>* result,
     const std::string& paths, const std::string& sharedLibPath)
 {
     for (const auto& path: TfStringSplit(paths, ARCH_PATH_LIST_SEP)) {
@@ -80,13 +81,11 @@ ARCH_CONSTRUCTOR(Plug_InitConfig, 2, void)
 
     sharedLibPath = TfGetPathName(sharedLibPath);
 
-    // Environment locations.
-    _AppendPathList(&result, TfGetenv(pathEnvVarName), sharedLibPath);
-
-    // Fallback locations.
-    _AppendPathList(&result, buildLocation, sharedLibPath);
-    _AppendPathList(&result, pluginBuildLocation, sharedLibPath);
-    _AppendPathList(&result, installLocation, sharedLibPath);
+    // Katana
+    std::string katanaPath = sharedLibPath;
+    katanaPath =
+        TfStringCatPaths(katanaPath, "../../../../etc/usdPlugInfo/plugins");
+    _AppendPathList(&result, katanaPath, sharedLibPath);
 
     Plug_SetPaths(result);
 }

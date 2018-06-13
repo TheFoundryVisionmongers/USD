@@ -33,10 +33,22 @@ set(_PXR_GCC_CLANG_SHARED_CXX_FLAGS "${_PXR_GCC_CLANG_SHARED_CXX_FLAGS} -std=c++
 # Enable all warnings.
 set(_PXR_GCC_CLANG_SHARED_CXX_FLAGS "${_PXR_GCC_CLANG_SHARED_CXX_FLAGS} -Wall")
 
+if (NOT BUILD_SHARED_LIBS)
+    # For Linux static library builds, ensure symbols are not exported.
+    set(_PXR_GCC_CLANG_SHARED_CXX_FLAGS
+        "${_PXR_GCC_CLANG_SHARED_CXX_FLAGS} -fvisibility=hidden")
+    set(_PXR_GCC_CLANG_SHARED_CXX_FLAGS
+        "${_PXR_GCC_CLANG_SHARED_CXX_FLAGS} -fvisibility-inlines-hidden")
+endif ()
+
 # Errors are warnings in strict build mode.
 if (${PXR_STRICT_BUILD_MODE})
     set(_PXR_GCC_CLANG_SHARED_CXX_FLAGS "${_PXR_GCC_CLANG_SHARED_CXX_FLAGS} -Werror")
 endif()
+
+# Enable debug symbols in release mode.
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
 
 # We use hash_map, suppress deprecation warning.
 _disable_warning("deprecated")

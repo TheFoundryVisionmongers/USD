@@ -1,6 +1,5 @@
 set(DIRS
     lib
-    bin
     plugin
 )
 

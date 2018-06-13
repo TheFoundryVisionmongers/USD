@@ -141,6 +141,7 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/utility/value_init.hpp>
 #include <boost/weak_ptr.hpp>
+#include <ciso646>
 #include <opensubdiv/far/topologyRefiner.h>
 #include <opensubdiv/far/topologyRefinerFactory.h>
 #include <tbb/atomic.h>

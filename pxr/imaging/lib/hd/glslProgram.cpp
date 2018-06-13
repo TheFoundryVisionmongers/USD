@@ -196,7 +196,7 @@ HdGLSLProgram::Link()
     }
 
     // binary dump out
-    if (TfDebug::IsEnabled(HD_DUMP_SHADER_BINARY)) {
+    if (TfDebug::IsEnabled(HD_DUMP_SHADER_BINARY) && size > 0) {
         std::vector<char> bin(size);
         GLsizei len;
         GLenum format;

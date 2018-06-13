@@ -91,6 +91,12 @@ public:
         HitAll
     };
 
+    enum ComputeMode {
+        Rasterization,
+        CpuCompute
+    };
+
+
     /// A callback to provide a depth mask. For example, useful for lasso
     /// selection.
     typedef std::function<void(void)> DepthMaskCallback;
@@ -104,6 +110,7 @@ public:
             , cullStyle(HdCullStyleNothing)
             , depthMaskCallback(HdxNoDepthMask)
             , renderTags()
+            , computeMode(Rasterization)
         {}
 
         HitMode hitMode;
@@ -114,6 +121,7 @@ public:
         std::vector<GfVec4d> clipPlanes;
         DepthMaskCallback depthMaskCallback;
         TfTokenVector renderTags;
+        ComputeMode computeMode;
     };
 
     struct Hit {
@@ -169,6 +177,8 @@ public:
                Params params,
                GfVec4i viewport);
         HDX_API
+        Result(HitVector& hits);
+        HDX_API
         ~Result();
 
         HDX_API
@@ -197,6 +207,10 @@ public:
         HDX_API
         bool ResolveUnique(HdxIntersector::HitSet* hitSet) const;
 
+        /// Return a vector of hits
+        HDX_API
+        HitVector& GetHitsVector() { return _hits; }
+
     private:
         bool _ResolveHit(int index, int x, int y, float z, Hit* hit) const;
         size_t _GetHash(int index) const;
@@ -208,10 +222,17 @@ public:
         HdRenderIndex const *_index;
         Params _params;
         GfVec4i _viewport;
+        HitVector _hits;
     };
 
 private:
     void _Init(GfVec2i const&);
+
+    // Query using geometric intersection with view frustum, computed on CPU.
+    bool _QueryCpuCompute(HdxIntersector::Params const&,
+                          HdRprimCollection const&,
+                          HdEngine*,
+                          HdxIntersector::Result*);
 
     // A single shared render pass is used internally to avoid render pass
     // thrashing due to picking.

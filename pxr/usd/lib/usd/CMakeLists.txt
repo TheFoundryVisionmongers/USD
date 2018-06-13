@@ -123,17 +123,6 @@ pxr_library(usd
         generatedSchema.usda
 )
 
-if (NOT JINJA2_FOUND)
-    message(WARNING "Skipping building usdGenSchema due to missing dependency: Jinja2")
-else()
-    pxr_python_bin(usdGenSchema
-        DEPENDENCIES
-            tf
-            sdf
-            usd
-    )
-endif()
-
 pxr_test_scripts(
     testenv/testUsdAttributeBlocking.py
     testenv/testUsdAttributeConnections.py

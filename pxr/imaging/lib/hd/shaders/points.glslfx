@@ -50,15 +50,17 @@ void main(void)
     ApplyClipPlanes(outData.Peye);
 
     // scale width following prman's behavior
-    vec4 w = vec4(transform * HdGet_widths() * normalize(vec4(1,1,1,0)));
+    vec4 w = vec4(transform * GetWidths(0) * normalize(vec4(1,1,1,0)));
     float width = length(w.xyz);
 
     // compute screenspace width
     vec4 diameter = vec4(GetProjectionMatrix() * vec4(width, 0, outData.Peye.z, 1));
     vec2 viewportScale = GetViewport().zw * 0.5;
 
+    float pointSize = GetPointSize(gl_VertexID);
     gl_PointSize = clamp(viewportScale.x * diameter.x/diameter.w,
-                         HD_GL_POINT_SIZE_MIN, HD_GL_POINT_SIZE_MAX);
+                         HD_GL_POINT_SIZE_MIN, HD_GL_POINT_SIZE_MAX) *
+                         pointSize;
 }
 
 --- --------------------------------------------------------------------------

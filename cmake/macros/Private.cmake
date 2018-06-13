@@ -95,6 +95,7 @@ function(_plugInfo_subst libTarget pluginToLibraryPath plugInfoPath)
     set(PLUG_INFO_ROOT "..")
     set(PLUG_INFO_PLUGIN_NAME "pxr.${libTarget}")
     set(PLUG_INFO_LIBRARY_PATH "${pluginToLibraryPath}")
+    string(REPLACE "/lib/" "/bin/" PLUG_INFO_LIBRARY_PATH ${PLUG_INFO_LIBRARY_PATH})
 
     configure_file(
         ${plugInfoPath}
@@ -106,7 +107,7 @@ endfunction() # _plugInfo_subst
 function(_pxrDoxyConfig_subst)
     configure_file(${CMAKE_SOURCE_DIR}/pxr/usd/lib/usd/Doxyfile.in
                    ${CMAKE_BINARY_DIR}/Doxyfile
-    )  
+    )
 endfunction()
 
 # Install compiled python files alongside the python object,
@@ -128,7 +129,7 @@ function(_install_python LIBRARY_NAME)
     set(files_copied "")
     foreach(file ${ip_FILES})
         set(filesToInstall "")
-        set(installDest 
+        set(installDest
             "${libPythonPrefix}/pxr/${LIBRARY_INSTALLNAME}")
 
         # Only attempt to compile .py files. Files like plugInfo.json may also
@@ -165,7 +166,7 @@ function(_install_python LIBRARY_NAME)
             message(FATAL_ERROR "Cannot have non-Python file ${file} in PYTHON_FILES.")
         endif()
 
-        # Note that we always install under lib/python/pxr, even if we are in 
+        # Note that we always install under lib/python/pxr, even if we are in
         # the third_party project. This means the import will always look like
         # 'from pxr import X'. We need to do this per-loop iteration because
         # the installDest may be different due to the presence of subdirs.
@@ -220,7 +221,7 @@ function(_install_resource_files NAME pluginInstallPrefix pluginToLibraryPath)
     foreach(f ${resourceFiles})
         # Don't install subdirs for absolute paths, there's no way to tell
         # what the intended subdir structure is. In practice, any absolute paths
-        # should only come from the plugInfo.json processing above, which 
+        # should only come from the plugInfo.json processing above, which
         # install at the top-level anyway.
         if (NOT IS_ABSOLUTE ${f})
             get_filename_component(dirPath ${f} PATH)
@@ -313,13 +314,13 @@ function(_get_install_dir path out)
 endfunction() # get_install_dir
 
 function(_get_resources_dir_name output)
-    set(${output} 
-        resources 
+    set(${output}
+        resources
         PARENT_SCOPE)
 endfunction() # _get_resources_dir_name
 
 function(_get_plugin_root pluginsPrefix pluginName output)
-    set(${output} 
+    set(${output}
         ${pluginsPrefix}/${pluginName}
         PARENT_SCOPE)
 endfunction() # _get_plugin_root
@@ -327,8 +328,8 @@ endfunction() # _get_plugin_root
 function(_get_resources_dir pluginsPrefix pluginName output)
     _get_resources_dir_name(resourcesDir)
     _get_plugin_root(${pluginsPrefix} ${pluginName} pluginRoot)
-    set(${output} 
-        ${pluginRoot}/${resourcesDir} 
+    set(${output}
+        ${pluginRoot}/${resourcesDir}
         PARENT_SCOPE)
 endfunction() # _get_resources_dir
 
@@ -643,7 +644,7 @@ function(_pxr_install_rpath rpathRef NAME)
     endforeach()
 
     set_target_properties(${NAME}
-        PROPERTIES 
+        PROPERTIES
             INSTALL_RPATH_USE_LINK_PATH TRUE
             INSTALL_RPATH "${final}"
     )
@@ -853,9 +854,9 @@ function(_pxr_target_link_libraries NAME)
                     #
                     list(APPEND final -WHOLEARCHIVE:$<TARGET_FILE:${lib}>)
                     list(APPEND final ${lib})
-                elseif(CMAKE_COMPILER_IS_GNUCXX)
+                elseif(UNIX AND NOT APPLE)
                     list(APPEND final -Wl,--whole-archive ${lib} -Wl,--no-whole-archive)
-                elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+                elseif(APPLE)
                     list(APPEND final -Wl,-force_load ${lib})
                 else()
                     # Unknown platform.
@@ -897,7 +898,9 @@ function(_pxr_python_module NAME)
 
     # If we can't build Python modules then do nothing.
     if(NOT TARGET shared_libs)
-        message(STATUS "Skipping Python module ${NAME}, shared libraries required")
+        if(NOT FN_QUIET)
+            message(STATUS "Skipping Python module ${NAME}, shared libraries required")
+        endif()
         return()
     endif()
 
@@ -913,7 +916,7 @@ function(_pxr_python_module NAME)
     # Install .ui files.
     if (args_PYSIDE_UI_FILES)
         _install_pyside_ui_files(${LIBRARY_NAME} ${args_PYSIDE_UI_FILES})
-    endif()        
+    endif()
 
     # If no C++ files then we're done.
     if (NOT args_CPPFILES)
@@ -935,7 +938,7 @@ function(_pxr_python_module NAME)
 
     # Convert the name of the library into the python module name
     # , e.g. _tf.so -> Tf. This is later used to determine the eventual
-    # install location as well as for inclusion into the __init__.py's 
+    # install location as well as for inclusion into the __init__.py's
     # __all__ list.
     _get_python_module_name(${LIBRARY_NAME} pyModuleName)
 
@@ -945,7 +948,7 @@ function(_pxr_python_module NAME)
     )
 
     # Always install under the 'pxr' module, rather than base on the
-    # project name. This makes importing consistent, e.g. 
+    # project name. This makes importing consistent, e.g.
     # 'from pxr import X'. Additionally, python libraries always install
     # into the default lib install, not into the third_party subdirectory
     # or similar.
@@ -1030,7 +1033,7 @@ function(_pxr_python_module NAME)
         LIBRARY DESTINATION ${libInstallPrefix}
         RUNTIME DESTINATION ${libInstallPrefix}
     )
-    
+
     if(NOT "${PXR_PREFIX}" STREQUAL "")
         if(args_PRECOMPILED_HEADERS)
             _pxr_enable_precompiled_header(${LIBRARY_NAME}
@@ -1297,6 +1300,14 @@ function(_pxr_library NAME)
     #
     # Set up the install.
     #
+
+    if(MSVC)
+        install(FILES
+                ${CMAKE_CURRENT_BINARY_DIR}/${PXR_LIB_PREFIX}${NAME}.pdb
+                DESTINATION
+                ${libInstallPrefix}
+        )
+    endif(MSVC)
 
     if(NOT isObject)
         if(BUILD_SHARED_LIBS AND NOT PXR_BUILD_MONOLITHIC)

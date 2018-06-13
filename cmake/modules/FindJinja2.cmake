@@ -29,10 +29,12 @@ if (NOT PYTHON_EXECUTABLE)
 endif()
 
 execute_process(
-    COMMAND 
+    COMMAND
         "${PYTHON_EXECUTABLE}" "-c" "import jinja2"
     RESULT_VARIABLE
-        jinja2ImportResult 
+        jinja2ImportResult
+    OUTPUT_QUIET
+    ERROR_QUIET
 )
 if (jinja2ImportResult EQUAL 0)
     message(STATUS "Found Jinja2")

@@ -58,7 +58,7 @@ TF_API
 void* TfDlopen(const std::string &filename,
                int flag, 
                std::string *error = NULL,
-               bool loadScriptBindings = true);
+               bool loadScriptBindings = false);
 
 /// Close a dynamic library.
 TF_API

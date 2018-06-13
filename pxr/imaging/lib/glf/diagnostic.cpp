@@ -39,6 +39,14 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+static std::string GlfGluErrorString(GLenum error)
+{
+    const GLubyte* errorString = gluErrorString(error);
+    if (errorString)
+        return std::string(reinterpret_cast<const char*>(errorString));
+    else
+        return std::string("unknown.");
+}
 
 void
 GlfPostPendingGLErrors(std::string const & where)
@@ -51,7 +59,7 @@ GlfPostPendingGLErrors(std::string const & where)
     while ((watchDogCount++ < 256) &&
             ((error = glGetError()) != GL_NO_ERROR)) {
         foundError = true;
-        const GLubyte *errorString = gluErrorString(error);
+        std::string errorString = GlfGluErrorString(error);
 
         std::ostringstream errorMessage;
         errorMessage << "GL error: " << errorString;

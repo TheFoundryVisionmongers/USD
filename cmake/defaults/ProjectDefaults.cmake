@@ -40,11 +40,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # Turn on folder usage
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# Default build type
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release")
-endif()
-
 if (PXR_BUILD_TESTS)
     # Enable CTest
     enable_testing()

@@ -30,10 +30,12 @@ if (NOT PYTHON_EXECUTABLE)
 endif()
 
 execute_process(
-    COMMAND 
+    COMMAND
         "${PYTHON_EXECUTABLE}" "-c" "from OpenGL import *"
     RESULT_VARIABLE
-        pyopenglImportResult 
+        pyopenglImportResult
+    OUTPUT_QUIET
+    ERROR_QUIET
 )
 if (pyopenglImportResult EQUAL 0)
     message(STATUS "Found PyOpenGL")

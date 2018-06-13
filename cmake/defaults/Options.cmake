@@ -37,6 +37,8 @@ option(PXR_ENABLE_HDF5_SUPPORT "Enable HDF5 backend in the Alembic plugin for US
 option(PXR_ENABLE_PTEX_SUPPORT "Enable Ptex support" ON)
 option(PXR_MAYA_TBB_BUG_WORKAROUND "Turn on linker flag (-Wl,-Bsymbolic) to work around a Maya TBB bug" OFF)
 option(PXR_ENABLE_NAMESPACES "Enable C++ namespaces." ON)
+option(FN_QUIET "Silence a number of warning messages." ON)
+
 
 # Precompiled headers are a win on Windows, not on gcc.
 set(pxr_enable_pch "OFF")

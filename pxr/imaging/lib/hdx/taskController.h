@@ -86,6 +86,9 @@ public:
     /// scene graph objects it creates).
     SdfPath const& GetControllerId() { return _controllerId; }
 
+    /// Return the scene-graph id of the SimpleLightTask.
+    SdfPath const& GetSimpleLightTaskId() const { return _simpleLightTaskId; }
+
     /// -------------------------------------------------------
     /// Execution API
 

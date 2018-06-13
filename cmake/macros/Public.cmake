@@ -39,7 +39,9 @@ function(pxr_python_bin BIN_NAME)
 
     # If we can't build Python modules then do nothing.
     if(NOT TARGET python)
-        message(STATUS "Skipping Python program ${BIN_NAME}, Python modules required")
+        if(NOT FN_QUIET)
+          message(STATUS "Skipping Python program ${BIN_NAME}, Python modules required")
+        endif()
         return()
     endif()
 
@@ -114,14 +116,14 @@ endfunction() # pxr_python_bin
 
 function(pxr_cpp_bin BIN_NAME)
     _get_install_dir(bin installDir)
-    
+
     set(multiValueArgs
         LIBRARIES
         INCLUDE_DIRS
     )
 
     cmake_parse_arguments(cb
-        ""  
+        ""
         ""
         "${multiValueArgs}"
         ${ARGN}
@@ -146,7 +148,7 @@ function(pxr_cpp_bin BIN_NAME)
     )
 
     target_include_directories(${BIN_NAME}
-        PRIVATE 
+        PRIVATE
         ${cb_INCLUDE_DIRS}
         ${PRIVATE_INC_DIR}
     )
@@ -221,7 +223,9 @@ function(pxr_library NAME)
     if(args_TYPE STREQUAL "PLUGIN")
         # We can't build plugins if we're not building shared libraries.
         if(NOT TARGET shared_libs)
-            message(STATUS "Skipping plugin ${NAME}, shared libraries required")
+            if(NOT FN_QUIET)
+                message(STATUS "Skipping plugin ${NAME}, shared libraries required")
+            endif()
             return()
         endif()
 
@@ -296,6 +300,9 @@ function(pxr_library NAME)
             PRECOMPILED_HEADER_NAME ${args_PRECOMPILED_HEADER_NAME}
         )
     endif()
+
+    FnMSVCTargetInstallPDB(${NAME})
+
 endfunction()
 
 macro(pxr_shared_library NAME)
@@ -341,7 +348,7 @@ function (pxr_create_test_module MODULE_NAME)
         return()
     endif()
 
-    if (NOT PXR_BUILD_TESTS) 
+    if (NOT PXR_BUILD_TESTS)
         return()
     endif()
 
@@ -359,21 +366,21 @@ function (pxr_create_test_module MODULE_NAME)
     # XXX -- We shouldn't have to install to run tests.
     if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${initPyFile}")
         install(
-            FILES 
+            FILES
                 ${initPyFile}
-            RENAME 
+            RENAME
                 __init__.py
-            DESTINATION 
+            DESTINATION
                 tests/${tm_INSTALL_PREFIX}/lib/python/${MODULE_NAME}
         )
     endif()
     if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${plugInfoFile}")
         install(
-            FILES 
+            FILES
                 ${plugInfoFile}
-            RENAME 
+            RENAME
                 plugInfo.json
-            DESTINATION 
+            DESTINATION
                 tests/${tm_INSTALL_PREFIX}/lib/python/${MODULE_NAME}
         )
     endif()
@@ -387,7 +394,7 @@ function(pxr_build_test_shared_lib LIBRARY_NAME)
             "LIBRARIES;CPPFILES"
             ${ARGN}
         )
-        
+
         add_library(${LIBRARY_NAME}
             SHARED
             ${bt_CPPFILES}
@@ -397,7 +404,7 @@ function(pxr_build_test_shared_lib LIBRARY_NAME)
         )
         _get_folder("tests/lib" folder)
         set_target_properties(${LIBRARY_NAME}
-            PROPERTIES 
+            PROPERTIES
                 FOLDER "${folder}"
         )
 
@@ -421,7 +428,7 @@ function(pxr_build_test_shared_lib LIBRARY_NAME)
             set(testPlugInfoResourceDir "${testPlugInfoLibDir}/${TEST_PLUG_INFO_RESOURCE_PATH}")
             set(testPlugInfoPath "${CMAKE_BINARY_DIR}/${testPlugInfoResourceDir}/plugInfo.json")
 
-            file(RELATIVE_PATH 
+            file(RELATIVE_PATH
                 TEST_PLUG_INFO_LIBRARY_PATH
                 "${CMAKE_INSTALL_PREFIX}/${testPlugInfoLibDir}"
                 "${CMAKE_INSTALL_PREFIX}/tests/lib/${LIBRARY_FILE}")
@@ -470,7 +477,7 @@ function(pxr_build_test TEST_NAME)
         # unexpected results.
         _get_folder("tests/bin" folder)
         set_target_properties(${TEST_NAME}
-            PROPERTIES 
+            PROPERTIES
                 FOLDER "${folder}"
             	POSITION_INDEPENDENT_CODE ON
         )
@@ -518,7 +525,7 @@ endfunction() # pxr_test_scripts
 function(pxr_install_test_dir)
     if (PXR_BUILD_TESTS)
         cmake_parse_arguments(bt
-            "" 
+            ""
             "SRC;DEST"
             ""
             ${ARGN}
@@ -535,7 +542,7 @@ endfunction() # pxr_install_test_dir
 function(pxr_register_test TEST_NAME)
     if (PXR_BUILD_TESTS)
         cmake_parse_arguments(bt
-            "PYTHON;REQUIRES_DISPLAY;REQUIRES_SHARED_LIBS;REQUIRES_PYTHON_MODULES" 
+            "PYTHON;REQUIRES_DISPLAY;REQUIRES_SHARED_LIBS;REQUIRES_PYTHON_MODULES"
             "CUSTOM_PYTHON;COMMAND;STDOUT_REDIRECT;STDERR_REDIRECT;DIFF_COMPARE;POST_COMMAND;POST_COMMAND_STDOUT_REDIRECT;POST_COMMAND_STDERR_REDIRECT;PRE_COMMAND;PRE_COMMAND_STDOUT_REDIRECT;PRE_COMMAND_STDERR_REDIRECT;FILES_EXIST;FILES_DONT_EXIST;CLEAN_OUTPUT;EXPECTED_RETURN_CODE;TESTENV"
             "ENV;PRE_PATH;POST_PATH"
             ${ARGN}
@@ -549,7 +556,9 @@ function(pxr_register_test TEST_NAME)
             # ARCH_CONSTRUCTOR and registration functions, which will almost
             # certainly cause problems.
             if(bt_REQUIRES_SHARED_LIBS)
-                message(STATUS "Skipping test ${TEST_NAME}, shared libraries required")
+                if(NOT FN_QUIET)
+                  message(STATUS "Skipping test ${TEST_NAME}, shared libraries required")
+                endif()
                 return()
             endif()
         endif()
@@ -560,12 +569,14 @@ function(pxr_register_test TEST_NAME)
             # to load USD modules.  If the test uses C++ to load USD
             # modules it tells us via REQUIRES_PYTHON_MODULES.
             if(bt_PYTHON OR bt_CUSTOM_PYTHON OR bt_REQUIRES_PYTHON_MODULES)
-                message(STATUS "Skipping test ${TEST_NAME}, Python modules required")
+                if(NOT FN_QUIET)
+                  message(STATUS "Skipping test ${TEST_NAME}, Python modules required")
+                endif()
                 return()
             endif()
         endif()
 
-        # This harness is a filter which allows us to manipulate the test run, 
+        # This harness is a filter which allows us to manipulate the test run,
         # e.g. by changing the environment, changing the expected return code, etc.
         set(testWrapperCmd ${PROJECT_SOURCE_DIR}/cmake/macros/testWrapper.py --verbose)
 
@@ -691,7 +702,7 @@ endfunction() # pxr_register_test
 function(pxr_setup_plugins)
     set(SHARE_INSTALL_PREFIX "share/usd")
 
-    # Install a top-level plugInfo.json in the shared area and into the 
+    # Install a top-level plugInfo.json in the shared area and into the
     # top-level plugin area
     _get_resources_dir_name(resourcesDir)
     set(plugInfoContents "{\n    \"Includes\": [ \"*/${resourcesDir}/\" ]\n}\n")
@@ -743,8 +754,8 @@ function(pxr_toplevel_prologue)
     # Generate a namespace declaration header, pxr.h, at the top level of
     # pxr at configuration time.
     configure_file(${CMAKE_SOURCE_DIR}/pxr/pxr.h.in
-        ${CMAKE_BINARY_DIR}/include/pxr/pxr.h     
-    )  
+        ${CMAKE_BINARY_DIR}/include/pxr/pxr.h
+    )
     install(
         FILES ${CMAKE_BINARY_DIR}/include/pxr/pxr.h
         DESTINATION include/pxr
@@ -850,12 +861,12 @@ function(pxr_toplevel_epilogue)
                 PRIVATE
                     -WHOLEARCHIVE:$<TARGET_FILE:usd_m>
             )
-        elseif(CMAKE_COMPILER_IS_GNUCXX)
+        elseif(UNIX AND NOT APPLE)
             target_link_libraries(usd_ms
                 PRIVATE
                     -Wl,--whole-archive $<TARGET_FILE:usd_m> -Wl,--no-whole-archive
             )
-        elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+        elseif(APPLE)
             target_link_libraries(usd_ms
                 PRIVATE
                     -Wl,-force_load $<TARGET_FILE:usd_m>

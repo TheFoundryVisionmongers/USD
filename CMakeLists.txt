@@ -8,7 +8,11 @@ endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/defaults
                       ${CMAKE_SOURCE_DIR}/cmake/modules
-                      ${CMAKE_SOURCE_DIR}/cmake/macros)
+                      ${CMAKE_SOURCE_DIR}/cmake/macros
+                      ${CMAKE_SOURCE_DIR}/FoundryScripts
+                      ${CMAKE_MODULE_PATH})
+
+include(FnBuildHelpers)
 
 include(Options)
 

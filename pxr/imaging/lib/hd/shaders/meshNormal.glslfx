@@ -32,17 +32,31 @@
 
 vec3 GetVertexNormal()
 {
+    // get normal from vertex attribute
+#if defined(HD_HAS_normals)
+    return vec3(HdGet_normals().xyz);
+#elif defined(HD_HAS_packedNormals)
+    return vec3(HdGet_packedNormals().xyz);
+#else
     return vec3(0);
+#endif
 }
 
 vec3 GetTriGeometryNormal(vec3 vertexNormal,
                           vec4 Peye0, vec4 Peye1, vec4 Peye2, bool isFlipped)
 {
+#if defined(HD_HAS_normals) || defined(HD_HAS_packedNormals)
+    // plumb through
+    // authored normals shouldn't be flipped by matrices nor handedness
+    // even though we transform normals in the vertex shader.
+    return vertexNormal;
+#else
     // ignore vertex normal and compute flat facing normal
     vec3 n = normalize(cross(Peye1.xyz - Peye0.xyz, Peye2.xyz - Peye0.xyz));
 
     // flip if needed by negative-scaled transform
     return isFlipped ? -n : n;
+#endif
 }
 
 vec3 GetQuadGeometryNormal(vec3 vertexNormal,

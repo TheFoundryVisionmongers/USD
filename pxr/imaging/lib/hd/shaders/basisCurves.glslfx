@@ -259,10 +259,10 @@ Coeffs evaluateBasis(float u, float u2, float u3)
 
 float evaluateWidths(vec4 basis, float u)
 {
-    return HdGet_widths(0)*basis.x 
-         + HdGet_widths(1)*basis.y
-         + HdGet_widths(2)*basis.z 
-         + HdGet_widths(3)*basis.w;
+    return GetWidths(0)*basis.x
+         + GetWidths(1)*basis.y
+         + GetWidths(2)*basis.z
+         + GetWidths(3)*basis.w;
 }
 
 #ifdef HD_HAS_normals
@@ -295,10 +295,10 @@ Coeffs evaluateBasis(float u, float u2, float u3)
 
 float evaluateWidths(vec4 basis, float u)
 {
-    return HdGet_widths(0)*basis.x 
-         + HdGet_widths(1)*basis.y
-         + HdGet_widths(2)*basis.z 
-         + HdGet_widths(3)*basis.w;
+    return GetWidths(0)*basis.x
+         + GetWidths(1)*basis.y
+         + GetWidths(2)*basis.z
+         + GetWidths(3)*basis.w;
 }
 
 #ifdef HD_HAS_normals
@@ -331,7 +331,7 @@ Coeffs evaluateBasis(float u, float u2, float u3)
 
 float evaluateWidths(vec4 basis, float u)
 {
-    return mix(HdGet_widths(2), HdGet_widths(1), u);
+    return mix(GetWidths(2), GetWidths(1), u);
 }
 
 #ifdef HD_HAS_normals
@@ -361,7 +361,7 @@ Coeffs evaluateBasis(float u, float u2, float u3)
 
 float evaluateWidths(vec4 basis, float u)
 {
-    return mix(HdGet_widths(2), HdGet_widths(1), u);
+    return mix(GetWidths(2), GetWidths(1), u);
 }
 
 #ifdef HD_HAS_normals

@@ -45,7 +45,7 @@ TF_DEFINE_ENV_SETTING(GLF_DRAW_TARGETS_NUM_SAMPLES, 4,
                       "Number of samples greater than 1 forces MSAA.");
 
 static unsigned int 
-GetNumSamples()
+GetNumSamplesInternal()
 {
     static int reqNumSamples = TfGetEnvSetting(GLF_DRAW_TARGETS_NUM_SAMPLES);
     unsigned int numSamples = 1;
@@ -75,7 +75,7 @@ GlfDrawTarget::GlfDrawTarget( GfVec2i const & size, bool requestMSAA /* =false *
     // If MSAA has been requested and it is enabled then we will create
     // msaa buffers
     if (requestMSAA) {
-        _numSamples = GetNumSamples();
+        _numSamples = GetNumSamplesInternal();
     }
 
     _GenFrameBuffer();

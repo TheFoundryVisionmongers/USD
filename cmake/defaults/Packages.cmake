@@ -43,13 +43,16 @@ find_package(PythonInterp 2.7 REQUIRED)
 find_package(PythonLibs 2.7 REQUIRED)
 
 # --Boost
+set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost
     COMPONENTS
         date_time
+        filesystem
         program_options
         python
         regex
         system
+        thread
     REQUIRED
 )
 
@@ -93,6 +96,8 @@ if (PXR_BUILD_IMAGING)
     find_package(OpenEXR REQUIRED)
     # --OpenImageIO
     find_package(OpenImageIO REQUIRED)
+    # --Zlib
+    find_package(ZLIB REQUIRED)
     # --OpenGL
     find_package(OpenGL REQUIRED)
     find_package(GLEW REQUIRED)
@@ -121,6 +126,7 @@ endif()
 # ----------------------------------------------
 if (PXR_BUILD_KATANA_PLUGIN)
     find_package(KatanaAPI REQUIRED)
+    set(Boost_USE_STATIC_LIBS ON)
     find_package(Boost
         COMPONENTS
         thread

@@ -33,10 +33,12 @@ find_program(PYSIDEUICBINARY
 )
 
 execute_process(
-    COMMAND 
+    COMMAND
         "${PYTHON_EXECUTABLE}" "-c" "import PySide"
     RESULT_VARIABLE
-        pySideImportResult 
+        pySideImportResult
+    OUTPUT_QUIET
+    ERROR_QUIET
 )
 
 if (pySideImportResult EQUAL 0)

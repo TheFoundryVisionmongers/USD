@@ -1,1 +1,6 @@
 .p4*
+debug/*
+release/*
+*.swp
+objects/win-64-x86-*-14.0.24210-dynamic/
+objects/linux-64-x86-*-480-gcc/

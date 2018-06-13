@@ -25,9 +25,11 @@ include(CXXHelpers)
 include(Version)
 include(Options)
 
-if (CMAKE_COMPILER_IS_GNUCXX)
+# FIXME(NH): "gccdefaults"/"clangdefaults" are slightly misnamed; we should
+# better distinguish between platform configuration and compiler configuration.
+if (UNIX AND NOT APPLE)
     include(gccdefaults)
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+elseif (APPLE)
     include(clangdefaults)
 elseif(MSVC)
     include(msvcdefaults)

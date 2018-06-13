@@ -537,10 +537,15 @@ HdStMesh::_PopulateVertexPrimVars(HdSceneDelegate *sceneDelegate,
     //
 
     HdBufferSourceSharedPtr points;
+    // Are authored normals present?
+    bool hasNormals = false;
 
     // Track index to identify varying primvars.
     int i = 0;
     TF_FOR_ALL(nameIt, primVarNames) {
+        if (*nameIt == HdTokens->normals || *nameIt == HdTokens->packedNormals) {
+            hasNormals = true;
+        }
         // If the index is greater than the last vertex index, isVarying=true.
         bool isVarying = i++ > vertexPartitionIndex;
 
@@ -599,7 +604,7 @@ HdStMesh::_PopulateVertexPrimVars(HdSceneDelegate *sceneDelegate,
     // detect transitions from packed to unpacked normals.
     bool usePackedNormals = _packedNormals;
 
-    if (requireSmoothNormals &&
+    if (!hasNormals && requireSmoothNormals &&
         (*dirtyBits & DirtySmoothNormals)) {
         // note: normals gets dirty when points are marked as dirty,
         // at changetracker.

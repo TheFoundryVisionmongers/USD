@@ -197,6 +197,9 @@ public:
     /// Returns if the draw target uses msaa
     bool HasMSAA() const { return (_numSamples > 1); }
 
+    /// Returns the number of samples used for msaa.
+    unsigned int GetNumSamples() const { return _numSamples; }
+
     /// Returns the framebuffer object Id.
     GLF_API
     GLuint GetFramebufferId() const;
