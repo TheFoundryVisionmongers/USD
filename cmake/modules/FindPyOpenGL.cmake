@@ -34,6 +34,8 @@ execute_process(
         "${PYTHON_EXECUTABLE}" "-c" "from OpenGL import *"
     RESULT_VARIABLE
         pyopenglImportResult 
+    OUTPUT_QUIET
+    ERROR_QUIET 
 )
 if (pyopenglImportResult EQUAL 0)
     message(STATUS "Found PyOpenGL")

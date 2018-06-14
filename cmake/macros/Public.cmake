@@ -39,7 +39,9 @@ function(pxr_python_bin BIN_NAME)
 
     # If we can't build Python modules then do nothing.
     if(NOT TARGET python)
-        message(STATUS "Skipping Python program ${BIN_NAME}, Python modules required")
+        if(NOT FN_QUIET)
+            message(STATUS "Skipping Python program ${BIN_NAME}, Python modules required")
+        endif()
         return()
     endif()
 
@@ -246,7 +248,9 @@ function(pxr_library NAME)
     if(args_TYPE STREQUAL "PLUGIN")
         # We can't build plugins if we're not building shared libraries.
         if(NOT TARGET shared_libs)
-            message(STATUS "Skipping plugin ${NAME}, shared libraries required")
+            if(NOT FN_QUIET)
+                message(STATUS "Skipping plugin ${NAME}, shared libraries required")
+            endif()
             return()
         endif()
 
@@ -321,6 +325,9 @@ function(pxr_library NAME)
             PRECOMPILED_HEADER_NAME ${args_PRECOMPILED_HEADER_NAME}
         )
     endif()
+
+    FnMSVCTargetInstallPDB(${NAME})
+
 endfunction()
 
 macro(pxr_shared_library NAME)
@@ -574,7 +581,9 @@ function(pxr_register_test TEST_NAME)
             # ARCH_CONSTRUCTOR and registration functions, which will almost
             # certainly cause problems.
             if(bt_REQUIRES_SHARED_LIBS)
-                message(STATUS "Skipping test ${TEST_NAME}, shared libraries required")
+                if(NOT FN_QUIET)
+                  message(STATUS "Skipping test ${TEST_NAME}, shared libraries required")
+                endif()
                 return()
             endif()
         endif()
@@ -585,7 +594,9 @@ function(pxr_register_test TEST_NAME)
             # to load USD modules.  If the test uses C++ to load USD
             # modules it tells us via REQUIRES_PYTHON_MODULES.
             if(bt_PYTHON OR bt_CUSTOM_PYTHON OR bt_REQUIRES_PYTHON_MODULES)
-                message(STATUS "Skipping test ${TEST_NAME}, Python modules required")
+                if(NOT FN_QUIET)
+                    message(STATUS "Skipping test ${TEST_NAME}, Python modules required")
+                endif()
                 return()
             endif()
         endif()
@@ -877,12 +888,12 @@ function(pxr_toplevel_epilogue)
                 PRIVATE
                     -WHOLEARCHIVE:$<TARGET_FILE:usd_m>
             )
-        elseif(CMAKE_COMPILER_IS_GNUCXX)
+        elseif(UNIX AND NOT APPLE)
             target_link_libraries(usd_ms
                 PRIVATE
                     -Wl,--whole-archive $<TARGET_FILE:usd_m> -Wl,--no-whole-archive
             )
-        elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+        elseif(APPLE)
             target_link_libraries(usd_ms
                 PRIVATE
                     -Wl,-force_load $<TARGET_FILE:usd_m>

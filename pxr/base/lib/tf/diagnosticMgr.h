@@ -124,17 +124,21 @@ public:
         virtual ~Delegate() = 0;
 
         /// Called when a \c TfError is posted.
+        TF_API
         virtual void IssueError(TfError const &err) = 0;
 
         /// Called when a \c TF_FATAL_ERROR is issued (or a failed
         /// \c TF_AXIOM).
+        TF_API
         virtual void IssueFatalError(TfCallContext const &context,
                                      std::string const &msg) = 0;
 
         /// Called when a \c TF_STATUS() is issued.
+        TF_API
         virtual void IssueStatus(TfStatus const &status) = 0;
 
         /// Called when a \c TF_WARNING() is issued.
+        TF_API
         virtual void IssueWarning(TfWarning const &warning) = 0;
 
     protected:

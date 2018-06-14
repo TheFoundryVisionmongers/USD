@@ -48,6 +48,7 @@
 
 #include <sstream>
 
+#include <ciso646>
 #include <opensubdiv/osd/glslPatchShaderSource.h>
 
 PXR_NAMESPACE_OPEN_SCOPE

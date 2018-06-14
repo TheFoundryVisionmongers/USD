@@ -38,7 +38,7 @@
 #define HD_GL_POINT_SIZE_MAX  100.0
 #endif
 #ifndef HD_GL_POINT_SIZE_MIN
-#define HD_GL_POINT_SIZE_MIN  .45
+#define HD_GL_POINT_SIZE_MIN  0.0
 #endif
 
 // ---------------------------------------------------------------------------
@@ -92,6 +92,13 @@ float GetPointSize(int vertexID) {
     return HdGet_pointSize();
 #else
     return 3.0;
+#endif
+}
+float GetWidths(int vertexID) {
+#if defined(HD_HAS_widths)
+    return HdGet_widths();
+#else
+    return 0.01;
 #endif
 }
 vec4  GetWireframeColor() {

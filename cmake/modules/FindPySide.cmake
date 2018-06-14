@@ -30,6 +30,8 @@ endif()
 execute_process(
     COMMAND "${PYTHON_EXECUTABLE}" "-c" "import PySide"
     RESULT_VARIABLE pySideImportResult 
+    OUTPUT_QUIET
+    ERROR_QUIET
 )
 
 # Pyside is preferred over PySide2 since PySide2 support is still experimental.

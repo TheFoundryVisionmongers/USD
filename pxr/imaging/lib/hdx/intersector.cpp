@@ -27,6 +27,8 @@
 #include "pxr/imaging/hdx/package.h"
 #include "pxr/imaging/hdx/renderSetupTask.h"
 #include "pxr/imaging/hdx/tokens.h"
+#include "pxr/imaging/hdSt/bufferArrayRangeGL.h"
+#include "pxr/imaging/hdSt/bufferResourceGL.h"
 
 #include "pxr/imaging/hd/engine.h"
 #include "pxr/imaging/hd/renderDelegate.h"
@@ -40,6 +42,10 @@
 #include "pxr/imaging/glf/diagnostic.h"
 #include "pxr/imaging/glf/glContext.h"
 #include "pxr/imaging/glf/info.h"
+
+#include "pxr/base/gf/matrix4f.h"
+#include "pxr/base/gf/frustum.h"
+#include "pxr/base/work/loops.h"
 
 #include <iostream>
 
@@ -271,6 +277,13 @@ HdxIntersector::Query(HdxIntersector::Params const& params,
         TF_RUNTIME_ERROR("Invalid GL context");
         return false;
     }
+
+    // query using geometric intersection with view frustum
+    if (params.computeMode == CpuCompute)
+    {
+        return _QueryCpuCompute(params, pickablesCol, engine, result);
+    }
+
     if (!_drawTarget) {
         // Initialize the shared draw target late to ensure there is a valid GL
         // context, which may not be the case at constructon time.
@@ -513,6 +526,145 @@ HdxIntersector::Query(HdxIntersector::Params const& params,
     return true;
 }
 
+bool HdxIntersector::_QueryCpuCompute(HdxIntersector::Params const& params,
+                                      HdRprimCollection const& col,
+                                      HdEngine* engine,
+                                      HdxIntersector::Result* result)
+{
+    if (!TF_VERIFY(engine) || !TF_VERIFY(result))
+    {
+        return false;
+    }
+
+    // get draw item
+    // only support face selection on 1 mesh at time
+    const HdRenderIndex::HdDrawItemView drawItems = _index->GetDrawItems(col);
+    if (drawItems.empty())
+    {
+        return false;
+    }
+    const HdDrawItem* drawItem = drawItems.begin()->second[0];
+
+    // early-out if geometry bounds do not intersects the frustum
+    const GfMatrix4d viewProjMatrix = params.viewMatrix * params.projectionMatrix;
+    if (!GfFrustum::IntersectsViewVolume(drawItem->GetBounds(), viewProjMatrix))
+    {
+        return false;
+    }
+
+    // get geometry data from buffers
+    const HdStBufferArrayRangeGLSharedPtr vertexBuffer =
+        boost::static_pointer_cast<HdStBufferArrayRangeGL>(
+            drawItem->GetVertexPrimvarRange());
+
+    const HdStBufferArrayRangeGLSharedPtr topologyBuffer =
+        boost::static_pointer_cast<HdStBufferArrayRangeGL>(
+            drawItem->GetTopologyRange());
+
+    const VtValue verticesData = vertexBuffer->ReadData(HdTokens->points);
+    const VtArray<GfVec3f>& vertices =
+        verticesData.UncheckedGet<VtArray<GfVec3f>>();
+
+    const VtValue indicesData = topologyBuffer->ReadData(HdTokens->indices);
+    const VtArray<int>& indices =
+        indicesData.UncheckedGet<VtArray<int>>();
+
+    const VtValue primitiveParamData = topologyBuffer->ReadData(HdTokens->primitiveParam);
+    const VtArray<int>& primitiveParam =
+        primitiveParamData.UncheckedGet<VtArray<int>>();
+
+    const int numFaces = topologyBuffer->GetNumElements();
+    const int numFaceComponents =
+        topologyBuffer->GetResource(HdTokens->indices)->GetSize() / sizeof(int);
+
+    // vectors to store the selected faces
+    std::vector<int> selection(numFaces, -1);
+
+    HitVector allHits;
+    allHits.reserve(numFaces);
+
+    // compute selected faces
+    const GfMatrix4f clipMatrix = GfMatrix4f(drawItem->GetMatrix() * viewProjMatrix);
+
+    WorkParallelForN(numFaces, [numFaceComponents, &clipMatrix, &vertices,
+        &indices, &primitiveParam, &selection] (size_t start, size_t end)
+    {
+        std::vector<GfVec4f> faceVertices(numFaceComponents);
+
+        for (size_t i = start; i < end; ++i)
+        {
+            int idxOffset = i * numFaceComponents;
+            bool visible = false;
+
+            // check if face vertices are clipped
+            for (int j = 0; j < numFaceComponents; ++j)
+            {
+                int idx = indices[idxOffset + j];
+                GfVec4f& vertex = faceVertices[j];
+                vertex.Set(
+                    vertices[idx][0], vertices[idx][1], vertices[idx][2], 1.f);
+                vertex = vertex * clipMatrix;
+
+                bool clip0 =
+                    (vertex[0] < vertex[3]) &&
+                    (vertex[1] < vertex[3]) &&
+                    (vertex[2] < vertex[3]);
+
+                bool clip1 =
+                    (vertex[0] > -vertex[3]) &&
+                    (vertex[1] > -vertex[3]) &&
+                    (vertex[2] > -vertex[3]);
+
+                visible = visible || (clip0 && clip1);
+
+                // perspective division and save vertex
+                vertex = vertex / vertex[3];
+            }
+
+            // calculate face normal and check if is facing the camera
+            if (visible)
+            {
+                GfVec4f vectorA =
+                    faceVertices[1] - faceVertices[0];
+                GfVec4f vectorB =
+                    faceVertices[numFaceComponents - 1] - faceVertices[0];
+
+                GfVec3f normal = GfCross(
+                    GfVec3f(vectorA[0], vectorA[1], vectorA[2]),
+                    GfVec3f(vectorB[0], vectorB[1], vectorB[2]));
+                normal.Normalize();
+
+                // front facing test (oriented towards the camera)
+                float dotNV = GfDot(normal, GfVec3f(0.f, 0.f, 1.f));
+                visible = dotNV > 0.1f;
+            }
+
+            if (visible)
+            {
+                // decode per-primitive coarse-face-param
+                selection[i] = primitiveParam[i] >> 2;
+            }
+        }
+    });
+
+     // create a hit objects with the face idx
+    SdfPath objectId = col.GetRootPaths()[0];
+    for (int i = 0; i < numFaces; ++i)
+    {
+        if (selection[i] >= 0)
+        {
+            Hit hit;
+            hit.objectId = objectId;
+            hit.elementIndex = selection[i];
+            allHits.emplace_back(hit);
+        }
+    }
+
+    // create a result object
+    *result = HdxIntersector::Result(allHits);
+
+    return true;
+}
 HdxIntersector::Result::Result()
     : _index(nullptr)
     , _viewport(0,0,0,0)
@@ -538,6 +690,11 @@ HdxIntersector::Result::Result(std::unique_ptr<unsigned char[]> primIds,
     , _params(params)
     , _viewport(viewport)
 {
+}
+
+HdxIntersector::Result::Result(HitVector& hits)
+{
+    std::swap(_hits, hits);
 }
 
 HdxIntersector::Result::~Result()

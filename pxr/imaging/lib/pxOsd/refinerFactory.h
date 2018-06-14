@@ -31,6 +31,7 @@
 #include "pxr/imaging/pxOsd/meshTopology.h"
 #include "pxr/base/vt/array.h"
 
+#include <ciso646>
 #include <opensubdiv/far/topologyRefiner.h>
 #include <vector>
 

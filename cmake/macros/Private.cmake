@@ -95,6 +95,7 @@ function(_plugInfo_subst libTarget pluginToLibraryPath plugInfoPath)
     set(PLUG_INFO_ROOT "..")
     set(PLUG_INFO_PLUGIN_NAME "pxr.${libTarget}")
     set(PLUG_INFO_LIBRARY_PATH "${pluginToLibraryPath}")
+    string(REPLACE "/lib/" "/bin/" PLUG_INFO_LIBRARY_PATH ${PLUG_INFO_LIBRARY_PATH})
 
     configure_file(
         ${plugInfoPath}
@@ -860,9 +861,9 @@ function(_pxr_target_link_libraries NAME)
                     #
                     list(APPEND final -WHOLEARCHIVE:$<TARGET_FILE:${lib}>)
                     list(APPEND final ${lib})
-                elseif(CMAKE_COMPILER_IS_GNUCXX)
+                elseif(UNIX AND NOT APPLE)
                     list(APPEND final -Wl,--whole-archive ${lib} -Wl,--no-whole-archive)
-                elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+                elseif(APPLE)
                     list(APPEND final -Wl,-force_load ${lib})
                 else()
                     # Unknown platform.
@@ -904,7 +905,9 @@ function(_pxr_python_module NAME)
 
     # If we can't build Python modules then do nothing.
     if(NOT TARGET shared_libs)
-        message(STATUS "Skipping Python module ${NAME}, shared libraries required")
+        if(NOT FN_QUIET)
+            message(STATUS "Skipping Python module ${NAME}, shared libraries required")
+        endif()
         return()
     endif()
 
@@ -1302,6 +1305,14 @@ function(_pxr_library NAME)
     #
     # Set up the install.
     #
+
+    if(MSVC)
+        install(FILES
+            ${CMAKE_CURRENT_BINARY_DIR}/${PXR_LIB_PREFIX}${NAME}.pdb
+            DESTINATION
+            ${libInstallPrefix}
+        )
+    endif(MSVC)
 
     if(isObject)
         get_target_property(install_headers ${NAME} PUBLIC_HEADER)

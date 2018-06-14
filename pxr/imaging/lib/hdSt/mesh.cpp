@@ -568,7 +568,9 @@ HdStMesh::_PopulateVertexPrimvars(HdSceneDelegate *sceneDelegate,
         &computations);
     
     HdBufferSourceSharedPtr points;
-
+    // Are authored normals present?
+    bool hasNormals = false;
+    
     // See if points are being produced by gpu computations
     for (HdBufferSourceSharedPtr const & source: reserveOnlySources) {
         HdBufferSourceSharedPtr compSource; 
@@ -589,6 +591,10 @@ HdStMesh::_PopulateVertexPrimvars(HdSceneDelegate *sceneDelegate,
     // Track index to identify varying primvars.
     int i = 0;
     for (HdPrimvarDescriptor const& primvar: primvars) {
+        if (primvar.name == HdTokens->normals || primvar.name == HdTokens->packedNormals) {
+            hasNormals = true;
+        }
+
         // If the index is greater than the last vertex index, isVarying=true.
         bool isVarying = i++ > vertexPartitionIndex;
 
@@ -673,7 +679,7 @@ HdStMesh::_PopulateVertexPrimvars(HdSceneDelegate *sceneDelegate,
     // detect transitions from packed to unpacked normals.
     bool usePackedNormals = _packedNormals;
 
-    if (requireSmoothNormals &&
+    if (!hasNormals && requireSmoothNormals &&
         (*dirtyBits & DirtySmoothNormals)) {
         // note: normals gets dirty when points are marked as dirty,
         // at changetracker.

@@ -192,6 +192,15 @@ vec4 ApplyEdgeColor(vec4 Cfill, vec4 patchCoord)
     vec4 Cedge = vec4(mix(Cfill.rgb, wireColor.rgb, wireColor.a), 1);
     Cfill.rgb = mix(Cfill.rgb, Cedge.rgb, p);
 
+//BEGIN_KATANA_MOD
+//Because our object selection behaviour is to draw only wireframe on top of
+//the mesh we need to force the alpha to 1 for the edge when mesh has transparency
+   if (wireColor != vec4(0))
+   {
+       Cfill.a = mix(Cfill.a, 1.0, p);
+   }
+//END_KATANA_MOD
+
     return Cfill;
 }
 

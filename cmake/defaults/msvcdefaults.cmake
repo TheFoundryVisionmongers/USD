@@ -26,9 +26,7 @@
 set(_PXR_CXX_FLAGS "${_PXR_CXX_FLAGS} /EHsc")
 
 # Standards compliant.
-set(_PXR_CXX_FLAGS "${_PXR_CXX_FLAGS} /Zc:rvalueCast
-                                      /Zc:strictStrings
-                                      /Zc:inline")
+set(_PXR_CXX_FLAGS "${_PXR_CXX_FLAGS} /Zc:rvalueCast /Zc:strictStrings /Zc:inline")
 
 # Turn on all but informational warnings.
 set(_PXR_CXX_FLAGS "${_PXR_CXX_FLAGS} /W3")
@@ -81,10 +79,6 @@ _add_define("NOMINMAX")
 # (which doesn't exist on Windows)
 _add_define("YY_NO_UNISTD_H")
 
-# Forces all libraries that have separate source to be linked as
-# DLL's rather than static libraries on Microsoft Windows.
-_add_define("BOOST_ALL_DYN_LINK")
-
 # Need half::_toFloat and half::_eLut.
 _add_define("OPENEXR_DLL")
 
@@ -98,6 +92,9 @@ set(_PXR_CXX_FLAGS "${_PXR_CXX_FLAGS} /bigobj")
 
 # Enable PDB generation.
 set(_PXR_CXX_FLAGS "${_PXR_CXX_FLAGS} /Zi")
+set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF")
+set(CMAKE_MODULE_LINKER_FLAGS_RELEASE "${CMAKE_MODULE_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF")
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF")
 
 # Enable multiprocessor builds.
 set(_PXR_CXX_FLAGS "${_PXR_CXX_FLAGS} /MP")

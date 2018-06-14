@@ -33,6 +33,8 @@ execute_process(
         "${PYTHON_EXECUTABLE}" "-c" "import jinja2"
     RESULT_VARIABLE
         jinja2ImportResult 
+    OUTPUT_QUIET
+    ERROR_QUIET
 )
 if (jinja2ImportResult EQUAL 0)
     message(STATUS "Found Jinja2")

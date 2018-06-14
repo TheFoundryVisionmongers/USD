@@ -25,14 +25,25 @@ pxr_library(glf
         tf
         trace
         sdf
+        ${OIIO_LIBRARIES}
+        ${Boost_CHRONO_LIBRARY}
+        ${Boost_DATE_TIME_LIBRARY}
+        ${Boost_FILESYSTEM_LIBRARY}
         ${Boost_PYTHON_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}
+        ${Boost_THREAD_LIBRARY}
         ${OPENGL_gl_LIBRARY}
         ${OPENGL_glu_LIBRARY}
-        ${OIIO_LIBRARIES}
         ${GLEW_LIBRARY}
         ${X11_LIBRARIES}
-        ${OPENEXR_LIBRARY}
+        ${OPENEXR_Half_LIBRARY}
+        ${OPENEXR_Iex_LIBRARY}
+        ${OPENEXR_IlmImf_LIBRARY}
+        ${OPENEXR_Imath_LIBRARY}
+        ${JPEG_LIBRARY}
+        ${PNG_LIBRARY}
+        ${TIFF_LIBRARY}
+        ${ZLIB_LIBRARY}
         ${optionalLibs}
 
     INCLUDE_DIRS

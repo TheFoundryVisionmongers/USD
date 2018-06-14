@@ -337,6 +337,12 @@ HdxTaskController::TestIntersection(
         return false;
     }
 
+    if (qparams.computeMode == HdxIntersector::CpuCompute)
+    {
+        std::swap(*allHits, result.GetHitsVector());
+        return true;
+    }
+
     if (intersectionMode == HdxIntersectionModeTokens->nearest) {
         HdxIntersector::Hit hit;
         if (!result.ResolveNearest(&hit)) {

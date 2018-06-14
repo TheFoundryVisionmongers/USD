@@ -163,6 +163,7 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/utility/value_init.hpp>
 #include <boost/weak_ptr.hpp>
+#include <ciso646>
 #include <opensubdiv/far/patchTable.h>
 #include <opensubdiv/far/patchTableFactory.h>
 #include <opensubdiv/far/stencilTable.h>
