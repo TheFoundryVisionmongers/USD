@@ -82,6 +82,10 @@ _add_define("YY_NO_UNISTD_H")
 # Need half::_toFloat and half::_eLut.
 _add_define("OPENEXR_DLL")
 
+# We statically link Boost.
+_add_define("BOOST_ALL_NO_LIB")
+_add_define("BOOST_PYTHON_STATIC_LIB")
+
 # These files require /bigobj compiler flag
 #   Vt/arrayPyBuffer.cpp
 #   Usd/crateFile.cpp

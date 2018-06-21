@@ -222,9 +222,10 @@ def RunCMake(context, force, extraArgs = None):
                     osx_rpath=(osx_rpath or ""),
                     generator=(generator or ""),
                     extraArgs=(" ".join(extraArgs) if extraArgs else "")))
-        Run("cmake --build . --config Release --target install -- {multiproc}"
+        Run("cmake --build . --config {config} --target install -- {multiproc}"
             .format(multiproc=("/M:{procs}" if Windows() else "-j{procs}")
-                               .format(procs=context.numJobs)))
+                               .format(procs=context.numJobs),
+                    config=context.buildConfiguration))
 
 def PatchFile(filename, patches):
     """Applies patches to the specified file. patches is a list of tuples
@@ -446,10 +447,10 @@ def InstallBoost(context, force):
             '--build-dir="{buildDir}"'.format(buildDir=context.buildDir),
             '-j{procs}'.format(procs=num_procs),
             'address-model=64',
-            'link=shared',
+            'link=static',
             'runtime-link=shared',
             'threading=multi', 
-            'variant=release',
+            'variant={config}'.format(config=context.buildConfiguration),
             '--with-atomic',
             '--with-date_time',
             '--with-filesystem',
@@ -567,7 +568,7 @@ JPEG = Dependency("JPEG", InstallJPEG, "include/jpeglib.h")
 ############################################################
 # TIFF
 
-TIFF_URL = "ftp://download.osgeo.org/libtiff/tiff-4.0.7.zip"
+TIFF_URL = "https://download.osgeo.org/libtiff/tiff-4.0.7.zip"
 
 def InstallTIFF(context, force):
     with CurrentWorkingDirectory(DownloadURL(TIFF_URL, context, force)):
@@ -937,6 +938,9 @@ def InstallUSD(context):
             # Increase the precompiled header buffer limit.
             extraArgs.append('-DCMAKE_CXX_FLAGS="/Zm150"')
 
+            if context.buildConfiguration == 'debug':
+                extraArgs.append('-DTBB_USE_DEBUG_BUILD=1')
+
         RunCMake(context, False, extraArgs)
 
 ############################################################
@@ -979,6 +983,9 @@ group.add_argument("--build", type=str,
 group.add_argument("--generator", type=str,
                    help=("CMake generator to use when building libraries with "
                          "cmake"))
+group.add_argument("--configuration", type=str,
+                   default='release',
+                   help=("Specifies the build configuration (debug/release)"))
 
 (SHARED_LIBS, MONOLITHIC_LIB) = (0, 1)
 subgroup = group.add_mutually_exclusive_group()
@@ -1133,6 +1140,7 @@ class InstallContext:
         # Build type
         self.buildShared = (args.build_type == SHARED_LIBS)
         self.buildMonolithic = (args.build_type == MONOLITHIC_LIB)
+        self.buildConfiguration = args.configuration if Windows() else 'release'
 
         # Dependencies that are forced to be built
         self.forceBuildAll = args.force_all
@@ -1174,7 +1182,7 @@ class InstallContext:
         self.buildHoudini = args.build_houdini
         self.houdiniLocation = (os.path.abspath(args.houdini_location)
                                 if args.houdini_location else None)
-       
+
     def ForceBuildDependency(self, dep):
         # Never force building a Python dependency, since users are required
         # to build these dependencies themselves.
@@ -1323,6 +1331,7 @@ Building with settings:
   Build directory               {buildDir}
   CMake generator               {cmakeGenerator}
   Downloader                    {downloader}
+  Configuration                 {configuration}
 
   Building                      {buildType}
     Imaging                     {buildImaging}
@@ -1347,6 +1356,7 @@ Building with settings:
     cmakeGenerator=("Default" if not context.cmakeGenerator
                     else context.cmakeGenerator),
     downloader=("curl" if context.useCurl else "built-in"),
+    configuration=context.buildConfiguration,
     dependencies=("None" if not dependenciesToBuild else 
                   ", ".join([d.name for d in dependenciesToBuild])),
     buildType=("Shared libraries" if context.buildShared

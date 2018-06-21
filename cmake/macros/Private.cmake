@@ -1306,13 +1306,13 @@ function(_pxr_library NAME)
     # Set up the install.
     #
 
-    if(MSVC)
-        install(FILES
-            ${CMAKE_CURRENT_BINARY_DIR}/${PXR_LIB_PREFIX}${NAME}.pdb
-            DESTINATION
-            ${libInstallPrefix}
-        )
-    endif(MSVC)
+    #if(MSVC)
+    #    install(FILES
+    #        ${CMAKE_CURRENT_BINARY_DIR}/${BUILD_TYPE}/${PXR_LIB_PREFIX}${NAME}.pdb
+    #        DESTINATION
+    #        ${libInstallPrefix}
+    #    )
+    #endif(MSVC)
 
     if(isObject)
         get_target_property(install_headers ${NAME} PUBLIC_HEADER)
