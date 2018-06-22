@@ -1140,7 +1140,7 @@ class InstallContext:
         # Build type
         self.buildShared = (args.build_type == SHARED_LIBS)
         self.buildMonolithic = (args.build_type == MONOLITHIC_LIB)
-        self.buildConfiguration = args.configuration if Windows() else 'release'
+        self.buildConfiguration = args.configuration
 
         # Dependencies that are forced to be built
         self.forceBuildAll = args.force_all
